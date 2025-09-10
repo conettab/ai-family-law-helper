@@ -1,5 +1,3 @@
-import { Calendar, Plus, Inbox, Search, Settings } from "lucide-react"
-
 import {
   Sidebar,
   SidebarContent,
@@ -11,16 +9,22 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Menu items.
-const items = [
-  {
-    title: "New Chat",
-    url: "#",
-    icon: Plus,
-  },
-]
+import { Plus } from "lucide-react"
 
-export function AppSidebar() {
+type Conversation = {
+  id: number
+  title: string
+}
+
+export function AppSidebar({
+  conversations,
+  onSelectConversation,
+  onNewConversation,
+}: {
+  conversations: Conversation[]
+  onSelectConversation: (id: number) => void
+  onNewConversation: () => void
+}) {
   return (
     <Sidebar>
       <SidebarContent>
@@ -28,16 +32,31 @@ export function AppSidebar() {
           <SidebarGroupLabel>Past Chats</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {conversations.map((conv) => (
+                <SidebarMenuItem key={conv.id}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
+                    <button
+                      className="flex items-center gap-2 w-full text-left"
+                      onClick={() => onSelectConversation(conv.id)}
+                    >
+                      <span>{conv.title}</span>
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* New Chat button */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button
+                    className="flex items-center gap-2 w-full text-left text-blue-600 hover:text-blue-800"
+                    onClick={onNewConversation}
+                  >
+                    <Plus size={16} />
+                    <span>New Chat</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
