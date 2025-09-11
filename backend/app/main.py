@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
 import os
 import asyncpg
 
@@ -12,7 +13,9 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+OPENAI_KEY = os.getenv("API_KEY")
 
+aiClient = OpenAI(api_key=OPENAI_KEY)
 
 async def connect_db():
     return await asyncpg.connect(DATABASE_URL, ssl="require")
@@ -67,30 +70,46 @@ class AskRequest(BaseModel):
 
 @app.post("/ask")
 async def ask_question(request: AskRequest):
-    # Put the request in the database
     conn = await connect_db()
+    answer_text = "Yes! I think you should sue!"  
     try:
-        
-        await conn.execute("INSERT INTO messages (conversation_id, role, content) VALUES ($1, $2, $3)",
-                          request.conversation_id,
-                          "user",
-                          request.question
+        # Save user message
+        await conn.execute(
+            "INSERT INTO messages (conversation_id, role, content) VALUES ($1, $2, $3)",
+            request.conversation_id,
+            "user",
+            request.question
         )
 
+        try:
+            # Call OpenAI
+            response = aiClient.responses.create(
+                model="gpt-3.5-turbo",
+                input=request.question
+            )
 
-        # TODO: GET RESPONSE FROM OPENAI HERE
-        response = "Hello"
-        
+            if response and response.output:
+                answer_text = response.output[0].content[0].text
+            else:
+                answer_text = "I'm sorry, I couldn't generate a response."
+            
+            print("OpenAI response:", response)
 
-        # Put the response inside the database
-        await conn.execute("INSERT INTO messages (conversation_id, role, content) VALUES ($1, $2, $3)",
-                          request.conversation_id, 
-                          "assistant", 
-              
-                          response
+        except Exception as e:
+            print("OpenAI error:", e)
+            # Keep fallback `answer_text`
+
+        # Save assistant response in DB
+        await conn.execute(
+            "INSERT INTO messages (conversation_id, role, content) VALUES ($1, $2, $3)",
+            request.conversation_id,
+            "assistant",
+            answer_text
         )
-        # Placeholder for processing a question and returning an answer
-        return {"answer": f"{response}"}
+
+        return {"answer": answer_text}
+
     finally:
         await conn.close()
+
 

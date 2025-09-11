@@ -32,6 +32,7 @@ export default function Home() {
   const [conversationMessages, setConversationMessages] = useState<{ [key: number]: Message[] }>({});
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLoading, setLoading] = useState(false);
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,12 +93,13 @@ export default function Home() {
 
   const handleNewConversation = async () => {
     // Call API and create the conversation in the database. I feel this data flow is wrong. If this was production I would probably change it.
+    const number = conversations.length + 1
     try {
       const res = await fetch("http://127.0.0.1:8000/newConversation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "New Conversation"
+          title: "Conversation " + number
         }),
       });
 
@@ -109,10 +111,9 @@ export default function Home() {
 
       const newConversationId = data.conversation_id;
 
-      const newConversation: Conversation = { id: newConversationId, title: "New Conversation" };
+      const newConversation: Conversation = { id: newConversationId, title: "Conversation " + number };
       setConversations(prev => [...prev, newConversation]);
       setActiveConversationId(newConversationId);
-      console.log("WHEN NEW" + activeConversationId)
       setConversationMessages(prev => ({
         ...prev,
         [newConversationId]: [
@@ -149,6 +150,7 @@ export default function Home() {
     }
 
     setInput(""); // makes the chat box empty again
+    setLoading(true);
 
     // call API here to get response from assistant
       try {
@@ -177,6 +179,9 @@ export default function Home() {
         ...prev,
         [activeConversationId]: [...(prev[activeConversationId] || []), { text: "Sorry, there was an issue retrieving your message", sender: "assistant" }],
       }))
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -232,6 +237,8 @@ export default function Home() {
                   {msg.text}
                 </div>
               ))}
+              {/* Shows when it is waiting for a response */}
+              {isLoading && <div className="assistant-msg self-start bg-blue-100 text-gray-800 inline-block max-w-[70%] p-3 rounded-2xl shadow-md text-sm sm:text-base break-all">Typing...</div>}
             </div>
           </ScrollArea>
         </main>
