@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
+asyncpg
 pydantic
 openai   # optional if using OpenAI
 python-dotenv

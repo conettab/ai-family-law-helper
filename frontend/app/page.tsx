@@ -39,31 +39,92 @@ export default function Home() {
   // Get messages for the active conversation
   const messages = activeConversationId != null ? (conversationMessages[activeConversationId] || []) : [];
 
-  const handleSelectConversation = (id: number) => {
+  const loadConversationTitles = async () => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/conversations`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json"},
+      });
+      if(!res.ok) {
+        throw new Error("Error fetching conversation titles");
+      }
+
+      const data = await res.json();
+
+      setConversations(data);
+    }
+    catch (error){
+      console.error("Failure fetching conversations from API", error);
+    }
+  }
+
+  const handleSelectConversation =  async (id: number) => {
     setActiveConversationId(id);
     // TODO: Fetch messages for this conversation from backend if needed
     // For now, we use placeholder messages
-    setConversationMessages(prev => ({
-      ...prev,
-      [id]: prev[id] || [
-        { text: "Hello, how can I assist you with family law today?", sender: "assistant" }
-      ]
-    }));
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/conversations/${id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json"},
+      });
+      if(!res.ok) {
+        throw new Error("Error fetching conversation" + id);
+      }
+
+      const data = await res.json();
+     
+      setConversationMessages(prev => ({
+        ...prev,
+        [id]: data.length > 0 ? data : [
+          { text: "Hello, how can I assist you with family law today?", sender: "assistant" }
+        ]
+      }));
+    }
+    catch (error) {
+      console.log(error);
+      // If it fails, just say error fetching:
+      setConversationMessages(prev => ({
+        ...prev,
+        [id]: [{text: "Error fetching conversation history", sender: "assistant"}]
+      }));
+    }
   }
 
-  const handleNewConversation = () => {
-    const newConversationId = conversations.length + 1;
-    const newConversation: Conversation = { id: newConversationId, title: "New Conversation" };
-    setConversations(prev => [...prev, newConversation]);
-    setActiveConversationId(newConversationId);
-    setConversationMessages(prev => ({
-      ...prev,
-      [newConversationId]: [
-        { text: "Hello, how can I assist you with family law today?", sender: "assistant" }
-      ]
-    }));
-  }
+  const handleNewConversation = async () => {
+    // Call API and create the conversation in the database. I feel this data flow is wrong. If this was production I would probably change it.
+    try {
+      const res = await fetch("http://127.0.0.1:8000/newConversation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: "New Conversation"
+        }),
+      });
 
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await res.json();
+
+      const newConversationId = data.conversation_id;
+
+      const newConversation: Conversation = { id: newConversationId, title: "New Conversation" };
+      setConversations(prev => [...prev, newConversation]);
+      setActiveConversationId(newConversationId);
+      console.log("WHEN NEW" + activeConversationId)
+      setConversationMessages(prev => ({
+        ...prev,
+        [newConversationId]: [
+          { text: "Hello, how can I assist you with family law today?", sender: "assistant" }
+        ]
+      }));
+
+    }
+    catch (error) {
+
+    }
+  }
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -71,7 +132,7 @@ export default function Home() {
     const sentMessage: Message = { text: input.trim(), sender: "user" };
 
     if(activeConversationId === null) {
-      handleNewConversation();
+      await handleNewConversation();
     }
 
     if(activeConversationId === null) return; // Safety check
@@ -96,7 +157,7 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             question: input.trim(),
-            conversationId: activeConversationId
+            conversation_id: activeConversationId
           }),
         });
 
@@ -125,6 +186,11 @@ export default function Home() {
       scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages]);
+
+  // Load the conversation from API
+  useEffect(() => {
+    loadConversationTitles();
+  }, []);
 
   return (
     <div className="flex h-screen w-screen">
