@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar"
+import { SidebarTrigger} from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/ui/app-sidebar";
-import { Spinner, type SpinnerProps } from '@/components/ui/shadcn-io/spinner';
+import { Spinner } from '@/components/ui/shadcn-io/spinner';
 
   type Message = {
     text: string;
@@ -20,12 +20,7 @@ import { Spinner, type SpinnerProps } from '@/components/ui/shadcn-io/spinner';
 
 export default function Home() {
 
-  const [conversations, setConversations] = useState<Conversation[]>([
-    // Example conversation names, these are overriden when the API is called
-    { id: 1, title: "Divorce Process" },
-    { id: 2, title: "Child Custody" },
-    { id: 3, title: "Property Division" },
-  ])
+  const [conversations, setConversations] = useState<Conversation[]>([])
 
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null)
 
@@ -34,15 +29,21 @@ export default function Home() {
 
   const [isTyping, setTyping] = useState(false);
   const [isLoading, setLoading] = useState(false);
+  const [isLoadingConversations, setLoadingConversations] = useState(false);
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Get messages for the active conversation
-  const messages = activeConversationId != null ? (conversationMessages[activeConversationId] || []) : [];
+  const messages = useMemo(() => {
+    return activeConversationId != null
+      ? (conversationMessages[activeConversationId] || [])
+      : [];
+  }, [conversationMessages, activeConversationId]);
 
   const loadConversationTitles = async () => {
     try {
+      setLoadingConversations(true);
       const res = await fetch(`https://ai-family-law-helper.onrender.com/conversations`, {
         method: "GET",
         headers: { "Content-Type": "application/json"},
@@ -57,6 +58,9 @@ export default function Home() {
     }
     catch (error){
       console.error("Failure fetching conversations from API", error);
+    }
+    finally {
+      setLoadingConversations(false);
     }
   }
 
@@ -128,6 +132,7 @@ export default function Home() {
       return newConversationId;
     }
     catch (error) {
+      console.log(error)
       return null
     }
   }
@@ -215,7 +220,11 @@ export default function Home() {
           conversations={conversations}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
-        />
+        >
+          {isLoadingConversations && <div className="flex justify-center">
+            <Spinner variant="circle" />
+          </div>}
+        </AppSidebar>
       </div>
 
       {/* Chat area */}

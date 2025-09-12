@@ -20,10 +20,12 @@ export function AppSidebar({
   conversations,
   onSelectConversation,
   onNewConversation,
+  children,
 }: {
   conversations: Conversation[]
   onSelectConversation: (id: number) => void
   onNewConversation: () => void
+  children?: React.ReactNode;
 }) {
   return (
     <Sidebar>
@@ -44,6 +46,9 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Loading circle */}
+              {children}
 
               {/* New Chat button */}
               <SidebarMenuItem>
