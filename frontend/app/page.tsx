@@ -43,7 +43,7 @@ export default function Home() {
 
   const loadConversationTitles = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/conversations`, {
+      const res = await fetch(`https://ai-family-law-helper.onrender.com/conversations`, {
         method: "GET",
         headers: { "Content-Type": "application/json"},
       });
@@ -65,7 +65,7 @@ export default function Home() {
     // Fetch messages from the backend
     setLoading(true)
     try {
-      const res = await fetch(`http://127.0.0.1:8000/conversations/${id}`, {
+      const res = await fetch(`https://ai-family-law-helper.onrender.com/conversations/${id}`, {
         method: "GET",
         headers: { "Content-Type": "application/json"},
       });
@@ -100,7 +100,7 @@ export default function Home() {
     // Call API and create the conversation in the database. I feel this data flow is wrong. If this was production I would probably change it.
     const number = conversations.length + 1
     try {
-      const res = await fetch("http://127.0.0.1:8000/newConversation", {
+      const res = await fetch("https://ai-family-law-helper.onrender.com/newConversation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -164,7 +164,7 @@ export default function Home() {
 
     // call API here to get response from assistant
     try {
-      const res = await fetch("http://127.0.0.1:8000/ask", {
+      const res = await fetch("https://ai-family-law-helper.onrender.com/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
