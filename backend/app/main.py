@@ -1,25 +1,25 @@
-from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from openai import OpenAI
+from google import genai
 import os
 import asyncpg
 
-app = FastAPI()
-
+# Load the env variables
 load_dotenv()
-
 DATABASE_URL = os.getenv("DATABASE_URL")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-OPENAI_KEY = os.getenv("API_KEY")
-
-aiClient = OpenAI(api_key=OPENAI_KEY)
+# Initalise clients
+app = FastAPI()
+aiClient = genai.Client()
 
 async def connect_db():
     return await asyncpg.connect(DATABASE_URL, ssl="require")
-app.add_middleware( # I hate dealing with CORS issues
+
+# I hate dealing with CORS issues, just wildcard for development
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -61,8 +61,6 @@ async def get_messages(id: str):
         return [{"text": conversation["content"], "sender": conversation["role"]} for conversation in rows]
     finally:
         await conn.close()
-    # Placeholder for fetching messages in a conversation
-    return [{"text": f"Hello{id}", "sender": "user"}, {"text": "Hi there!", "sender": "assistant"}]
 
 class AskRequest(BaseModel):
     question: str
@@ -83,13 +81,14 @@ async def ask_question(request: AskRequest):
 
         try:
             # Call OpenAI
-            response = aiClient.responses.create(
-                model="gpt-3.5-turbo",
-                input=request.question
+            response = aiClient.models.generate_content(
+              model="gemini-2.5-flash",
+              contents=request.question,
             )
 
-            if response and response.output:
-                answer_text = response.output[0].content[0].text
+
+            if response:
+                answer_text = response.text
             else:
                 answer_text = "I'm sorry, I couldn't generate a response."
             

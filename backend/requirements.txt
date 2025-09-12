@@ -1,7 +1,8 @@
 fastapi
+fastapi[standard]
 uvicorn[standard]
 asyncpg
 pydantic
-openai
 python-dotenv
 httpx
+google-genai
