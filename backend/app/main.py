@@ -69,7 +69,7 @@ class AskRequest(BaseModel):
 @app.post("/ask")
 async def ask_question(request: AskRequest):
     conn = await connect_db()
-    answer_text = "Yes! I think you should sue!"  
+    answer_text = "Mock answer (no API key provided or unreachable)"  
     try:
         # Save user message
         await conn.execute(
