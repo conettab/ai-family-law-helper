@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,8 +18,11 @@ import { Spinner } from '@/components/ui/shadcn-io/spinner';
     id: number;
     title: string;
   }
+  
 
 export default function Home() {
+
+  
 
   const [conversations, setConversations] = useState<Conversation[]>([])
 
@@ -30,6 +34,7 @@ export default function Home() {
   const [isTyping, setTyping] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [isLoadingConversations, setLoadingConversations] = useState(false);
+  const [isSending, setSending] = useState(false);
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -145,13 +150,12 @@ export default function Home() {
     let conversationId = activeConversationId;
 
     if(activeConversationId === null) {
+      setSending(true);
       conversationId = await handleNewConversation();
-      console.log(conversationId)
+      setSending(false);
     }
 
-    console.log(conversationId);
     if(conversationId === null) return; // Safety check
-    console.log("THERE")
 
     // Add user message to current conversation
     setConversationMessages((prev) => ({
@@ -213,6 +217,7 @@ export default function Home() {
   }, []);
 
   return (
+    
     <div className="flex h-screen w-screen">
       {/* Sidebar */}
       <div className="transition-all duration-300 overflow-hidden">
@@ -242,25 +247,49 @@ export default function Home() {
         </header>
 
         {/* Scrollable chat area */}
-        <main className="flex-1 overflow-y-auto px-4 py-2 bg-white">
-          <ScrollArea className="h-full">
-            <div className="flex flex-col gap-2 p-3">
+        <main className="flex-1 flex flex-col overflow-hidden px-4 py-2 bg-white w-full">
+          <ScrollArea className="flex-1 w-full overflow-y-auto overflow-x-hidden">
+            <div className="flex flex-col gap-2 p-3" style={{ width: '100%', overflow: 'hidden' }}>
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`inline-block max-w-[70%] p-3 rounded-2xl shadow-md text-sm sm:text-base break-all
-                    ${msg.sender === "user" ? "self-end bg-green-200 text-gray-900" : "self-start bg-blue-100 text-gray-800"}`}
+                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                   ref={idx === messages.length - 1 ? scrollRef : null}
                 >
-                  {msg.text}
+                  <div
+                    className={`max-w-[70%] p-3 rounded-2xl shadow-md text-justify sm:text-base
+                      ${msg.sender === "user" ? "bg-green-200 text-gray-900" : "bg-blue-100 text-gray-800"}`}
+                    style={{ 
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      maxWidth: '70%',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
                 </div>
               ))}
-              {/* Shows when it is waiting for a response */}
-              {isTyping && <div className="assistant-msg self-start bg-blue-100 text-gray-800 inline-block max-w-[70%] p-3 rounded-2xl shadow-md text-sm sm:text-base break-all">Typing...</div>}
-              {/* Shows when loading chat messages */}
-              {isLoading && <div className= "p-4"> 
-                <Spinner variant="circle" className="mx-auto"/>
-              </div>}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div 
+                    className="bg-blue-100 text-gray-800 max-w-[70%] p-3 rounded-2xl shadow-md text-sm sm:text-base"
+                    style={{ 
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      maxWidth: '70%',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    Typing...
+                  </div>
+                </div>
+              )}
+              {(isLoading || isLoadingConversations) && (
+                <div className="p-4">
+                  <Spinner variant="circle" className="mx-auto" />
+                </div>
+              )}
             </div>
           </ScrollArea>
         </main>
@@ -272,11 +301,12 @@ export default function Home() {
             placeholder="Type your message here..."
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleSend()}
+            onKeyDown={e => e.key === "Enter" && !isSending && !isLoadingConversations && handleSend()}
             className="rounded-full border border-solid border-gray-300 flex-1 font-medium text-sm sm:text-base h-10 sm:h-12"
           />
           <Button 
             className="rounded-full border border-solid border-transparent flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-6 w-auto"
+            disabled={isSending || isLoadingConversations}
             onClick={handleSend}
           >
             Send
