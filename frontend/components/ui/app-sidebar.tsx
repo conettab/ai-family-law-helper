@@ -28,12 +28,12 @@ export function AppSidebar({
   children?: React.ReactNode;
 }) {
   return (
-    <Sidebar>
+    <Sidebar className="dark">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Past Chats</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="text-gray-300">
               {conversations.map((conv) => (
                 <SidebarMenuItem key={conv.id}>
                   <SidebarMenuButton asChild>
@@ -54,7 +54,7 @@ export function AppSidebar({
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <button
-                    className="flex items-center gap-2 w-full text-left text-blue-600 hover:text-blue-800"
+                    className="flex items-center gap-2 w-full text-left text-gray-300"
                     onClick={onNewConversation}
                   >
                     <Plus size={16} />

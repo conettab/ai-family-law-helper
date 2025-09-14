@@ -218,7 +218,7 @@ export default function Home() {
 
   return (
     
-    <div className="flex h-screen w-screen">
+    <div className="flex h-screen w-screen bg-zinc-800 text-gray-200">
       {/* Sidebar */}
       <div className="transition-all duration-300 overflow-hidden">
         <AppSidebar
@@ -235,19 +235,18 @@ export default function Home() {
       {/* Chat area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between w-full px-4 py-2 bg-gray-200 shadow-sm">
+        <header className="flex items-center justify-between w-full px-4 py-2 shadow-sm">
           <SidebarTrigger
-            className="rounded-full px-4 py-2 bg-gray-800 text-white"
+            className="rounded-full px-4 py-2 bg-zinc-900"
           >
-            Sidebar
           </SidebarTrigger>
           <h1 className="sm:text-3xl font-bold text-center flex-1 p-2">
-            Welcome to <span className="text-[#0070f3]">AI Family Law Helper!</span>
+            Welcome to AI Family Law Helper!
           </h1>
         </header>
 
         {/* Scrollable chat area */}
-        <main className="flex-1 flex flex-col overflow-hidden px-4 py-2 bg-white w-full">
+        <main className="flex-1 flex flex-col overflow-hidden px-4 py-2 w-full">
           <ScrollArea className="flex-1 w-full overflow-y-auto overflow-x-hidden">
             <div className="flex flex-col gap-2 p-3" style={{ width: '100%', overflow: 'hidden' }}>
               {messages.map((msg, idx) => (
@@ -258,7 +257,7 @@ export default function Home() {
                 >
                   <div
                     className={`max-w-[70%] p-3 rounded-2xl shadow-md text-justify sm:text-base
-                      ${msg.sender === "user" ? "bg-green-200 text-gray-900" : "bg-blue-100 text-gray-800"}`}
+                      ${msg.sender === "user" ? "bg-zinc-600" : "bg-zinc-700"}`}
                     style={{ 
                       wordBreak: 'break-word',
                       overflowWrap: 'break-word',
@@ -273,7 +272,7 @@ export default function Home() {
               {isTyping && (
                 <div className="flex justify-start">
                   <div 
-                    className="bg-blue-100 text-gray-800 max-w-[70%] p-3 rounded-2xl shadow-md text-sm sm:text-base"
+                    className="max-w-[70%] p-3 rounded-2xl shadow-md text-sm sm:text-base bg-zinc-700"
                     style={{ 
                       wordBreak: 'break-word',
                       overflowWrap: 'break-word',
@@ -295,17 +294,17 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer className="flex gap-2 items-center w-full px-4 py-2 bg-white border-t border-gray-200">
+        <footer className="flex gap-2 items-center w-full px-4 py-2">
           <Input
             type="text"
             placeholder="Type your message here..."
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && !isSending && !isLoadingConversations && handleSend()}
-            className="rounded-full border border-solid border-gray-300 flex-1 font-medium text-sm sm:text-base h-10 sm:h-12"
+            className="rounded-full border-transparent bg-zinc-700 flex-1 font-medium text-sm sm:text-base h-10 sm:h-12 text-white"
           />
           <Button 
-            className="rounded-full border border-solid border-transparent flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-6 w-auto"
+            className="rounded-full dark border border-solid border-transparent flex items-center justify-center bg-foreground font-medium text-sm sm:text-base h-10 sm:h-12 px-6 w-auto"
             disabled={isSending || isLoadingConversations}
             onClick={handleSend}
           >
